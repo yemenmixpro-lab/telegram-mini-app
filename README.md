@@ -1,27 +1,32 @@
 # Telegram Mini App
 
-نسخة أولية بسيطة بواجهة عربية RTL، جاهزة للنشر على Railway.
+نسخة عربية بسيطة تعرض الخدمات الحقيقية من SMMCPAN مع زيادة 10% على السعر المعروض.
 
-## متغيرات Railway المطلوبة
-
-أضفها من **Service → Variables**:
+## المتغيرات
 
 ```env
 PORT=3000
 TELEGRAM_BOT_TOKEN=
-TELEGRAM_WEBAPP_URL=
+TELEGRAM_WEBAPP_URL=https://your-railway-domain.up.railway.app
 SMMCPAN_API_URL=https://smmcpan.com/api/v2
 SMMCPAN_API_KEY=
 ```
 
-اترك `PORT` كما هو؛ Railway يمرر المنفذ تلقائياً. بعد أول Deploy انسخ رابط Railway العام وضعه في `TELEGRAM_WEBAPP_URL` مع `https://`، ثم أعد Deploy.
+## ما يعمل الآن
 
-## التشغيل
+- Telegram Mini App بواجهة RTL متجاوبة.
+- تحميل قائمة الخدمات مباشرة من SMMCPAN.
+- عرض السعر بعد زيادة 10%: `سعر المزود × 1.10`.
+- لا يتم عرض مفتاح SMMCPAN في المتصفح.
 
-1. أنشئ بوتاً من `@BotFather` وخذ `TELEGRAM_BOT_TOKEN`.
-2. اربط المستودع في Railway واختر Deploy من GitHub.
-3. أضف المتغيرات السابقة، خصوصاً التوكن والمفتاح.
-4. افتح `https://رابط-التطبيق/health` وتأكد أن `ok` تساوي `true`.
-5. افتح البوت وأرسل `/start` ثم اضغط «فتح التطبيق».
+## مهم قبل تفعيل الطلبات
 
-لا ترفع ملف `.env` إلى GitHub ولا تشارك التوكن أو المفتاح.
+تم إبقاء إنشاء الطلبات معطلاً عمدًا في هذه المرحلة، لأن المشروع لا يحتوي بعد على دفع أو رصيد للمستخدم. تفعيل `/api/orders` قبل إضافة ذلك سيسمح لأي زائر باستهلاك رصيد حساب SMMCPAN. بعد تحديد طريقة الدفع/الرصيد يمكن إضافة الطلبات بأمان مع التحقق من Telegram WebApp.
+
+## التشغيل على Railway
+
+1. اربط المستودع في Railway.
+2. أضف المتغيرات السابقة من **Service → Variables**.
+3. نفّذ Deploy.
+4. افتح رابط Railway ثم اضغط **تحميل الخدمات**.
+5. من Telegram أرسل `/start` واضغط **فتح التطبيق**.
