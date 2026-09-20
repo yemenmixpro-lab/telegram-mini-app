@@ -2,10 +2,11 @@
   "name": "telegram-mini-app",
   "version": "1.0.0",
   "private": true,
-  "description": "Simple Arabic Telegram Mini App for browsing SMMCPAN services and ready for Railway deployment.",
+  "description": "Arabic Telegram Mini App for reading SMMCPAN services on Railway",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check": "node --check server.js"
   },
   "engines": {
     "node": ">=20"

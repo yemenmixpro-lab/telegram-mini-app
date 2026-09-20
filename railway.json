@@ -1,14 +1,57 @@
-{
-  "$schema": "https://railway.com/railway.schema.json",
-  "build": {
-    "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
-  },
-  "deploy": {
-    "startCommand": "node server.js",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
-  }
-}
+# Telegram Mini App
+
+تطبيق Telegram Mini App بسيط جاهز للنشر على Railway، ويعرض الخدمات من SMMCPAN فقط عبر واجهة خادم داخلية.
+
+## ما يتضمن هذا المشروع
+
+- واجهة عربية RTL مناسبة لـ Telegram
+- زر واضح: تحميل الخدمات
+- API داخلي: GET /api/services
+- استدعاء من الخادم إلى SMMCPAN باستخدام action=services
+- استخدام المتغيرات من ENV فقط
+- عدم إرسال SMMCPAN_API_KEY إلى الواجهة أو Telegram
+- جاهز للنشر على Railway
+
+## متغيرات البيئة
+
+```env
+PORT=3000
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBAPP_URL=https://your-railway-domain.up.railway.app
+SMMCPAN_API_URL=https://smmcpan.com/api/v2
+SMMCPAN_API_KEY=
+```
+
+## التشغيل محلياً
+
+```bash
+npm install
+npm start
+```
+
+ثم افتح:
+
+- http://localhost:3000/health
+- http://localhost:3000/api/services
+
+## Railway
+
+1. أضف المتغيرات في لوحة Railway.
+2. تأكد أن SMMCPAN_API_URL يساوي https://smmcpan.com/api/v2
+3. اضبط TELEGRAM_WEBAPP_URL إلى رابط النشر الفعلي.
+4. أعد النشر بعد حفظ المتغيرات.
+
+## نقاط مهمة
+
+- لا يتم إرسال مفتاح SMMCPAN إلى المتصفح.
+- لا توجد ميزات إضافية مثل الطلبات أو الرصيد أو الدفع أو السحب في هذه المرحلة.
+- التطبيق مصمم فقط لعرض الخدمات.
+
+## نقاط النهاية
+
+- GET /health
+- GET /api/services
+
+## ملاحظات
+
+يتم تحميل الخدمات فقط باستخدام الـ API الداخلي، وتعرض في Mini App بدون إظهار الـ API key في الواجهة.

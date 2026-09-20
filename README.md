@@ -1,1055 +1,257 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0d1728" />
-  <title>Subzo | الخدمات</title>
-  <style>
-    :root {
-      --bg: #f3f7ff;
-      --bg-2: #edf3ff;
-      --surface: rgba(255,255,255,0.9);
-      --card: #ffffff;
-      --line: #e7edf8;
-      --text: #13233d;
-      --muted: #5d6f8e;
-      --brand: #2563eb;
-      --brand-2: #1d4ed8;
-      --brand-soft: #ebf3ff;
-      --success: #0f8a56;
-      --success-soft: #e8f8ee;
-      --warning: #8a5b00;
-      --warning-soft: #fff6df;
-      --danger: #a12626;
-      --danger-soft: #fff1f1;
-      --shadow: 0 18px 42px rgba(19,35,61,.08);
-      --header-start: #0a1325;
-      --header-end: #173b71;
-    }
-
-    body[data-theme="dark"] {
-      --bg: #0f172a;
-      --bg-2: #101c33;
-      --surface: rgba(15, 23, 42, 0.75);
-      --card: #111d2f;
-      --line: rgba(148,163,184,.18);
-      --text: #e5eefc;
-      --muted: #9aaec9;
-      --brand: #66a2ff;
-      --brand-2: #4d8dff;
-      --brand-soft: rgba(102,162,255,.15);
-      --success: #4bd58b;
-      --success-soft: rgba(75,213,139,.12);
-      --warning: #ffd166;
-      --warning-soft: rgba(255,209,102,.12);
-      --danger: #ff9292;
-      --danger-soft: rgba(255,146,146,.12);
-      --header-start: #040d1b;
-      --header-end: #15335f;
-      --shadow: 0 22px 42px rgba(2, 6, 23, .35);
-    }
-
-    body[data-theme="auto"] {
-      background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
-    }
-
-    * { box-sizing:border-box; }
-    html, body { margin:0; min-height:100%; background:linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); color:var(--text); font-family:Tahome, Tahoma, Arial, sans-serif; }
-    body { padding:0 0 28px; }
-
-    a { color: inherit; text-decoration: none; }
-    button, input { font: inherit; }
-
-    .topbar {
-      background: linear-gradient(135deg, var(--header-start) 0%, var(--header-end) 100%);
-      color: #fff;
-      padding: 22px 18px 54px;
-    }
-
-    .topbar-inner, .shell {
-      width: min(100% - 24px, 1100px);
-      margin: 0 auto;
-    }
-
-    .brand-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo {
-      width: 48px;
-      height: 48px;
-      display: grid;
-      place-items: center;
-      border-radius: 14px;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.18);
-      font-weight: 900;
-      font-size: 20px;
-      letter-spacing: 0.5px;
-    }
-
-    .brand h3 {
-      margin: 0;
-      font-size: 17px;
-    }
-    .brand small {
-      display: block;
-      color: rgba(255,255,255,.7);
-      font-size: 12px;
-      margin-top: 3px;
-    }
-
-    .lang-switch, .theme-switch {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.12);
-    }
-
-    .lang-switch button, .theme-switch button {
-      border: 0;
-      background: transparent;
-      color: #fff;
-      opacity: 0.8;
-      padding: 8px 10px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .lang-switch button.active, .theme-switch button.active {
-      background: rgba(255,255,255,.12);
-      opacity: 1;
-    }
-
-    .hero {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .hero-copy {
-      max-width: 620px;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: 999px;
-      padding: 7px 12px;
-      color: rgba(255,255,255,.9);
-      font-size: 12px;
-      margin-bottom: 12px;
-      font-weight: 700;
-    }
-
-    .hero h1 {
-      margin: 0;
-      font-size: clamp(30px, 5vw, 48px);
-      line-height: 1.2;
-    }
-
-    .hero p {
-      margin: 12px 0 0;
-      color: rgba(255,255,255,.82);
-      line-height: 1.8;
-      font-size: 15px;
-    }
-
-    .mini-stat {
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 18px;
-      padding: 15px 18px;
-      min-width: 200px;
-    }
-
-    .mini-stat span {
-      display: block;
-      color: rgba(255,255,255,.7);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .mini-stat strong {
-      font-size: 26px;
-      font-weight: 900;
-    }
-
-    .shell {
-      position: relative;
-      margin-top: -24px;
-      padding-bottom: 26px;
-    }
-
-    .app-panel {
-      background: rgba(255,255,255,.72);
-      border: 1px solid var(--line);
-      border-radius: 26px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      backdrop-filter: blur(5px);
-    }
-
-    .nav-row {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding: 16px 16px 0;
-      scrollbar-width: none;
-    }
-
-    .nav-row::-webkit-scrollbar { display: none; }
-
-    .nav-btn {
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--muted);
-      padding: 10px 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      white-space: nowrap;
-      font-weight: 700;
-    }
-
-    .nav-btn.active {
-      background: var(--brand-soft);
-      border-color: rgba(37,99,235,.15);
-      color: var(--brand);
-    }
-
-    .section {
-      display: none;
-      padding: 16px 16px 20px;
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-      padding: 4px 0 12px;
-    }
-
-    .search-wrap {
-      position: relative;
-      flex: 1 1 420px;
-    }
-
-    .search-wrap::before {
-      content: "⌕";
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      font-size: 18px;
-    }
-
-    .search-wrap input {
-      width: 100%;
-      min-height: 50px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: var(--card);
-      padding: 0 42px 0 14px;
-      color: var(--text);
-      outline: none;
-    }
-
-    .search-wrap input:focus {
-      border-color: var(--brand);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.08);
-    }
-
-    .action-btn {
-      min-height: 50px;
-      padding: 0 20px;
-      border-radius: 14px;
-      border: 0;
-      background: linear-gradient(135deg, var(--brand), var(--brand-2));
-      color: white;
-      cursor: pointer;
-      font-weight: 800;
-      box-shadow: 0 12px 24px rgba(37,99,235,.2);
-    }
-
-    .ghost-btn {
-      min-height: 50px;
-      padding: 0 18px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: var(--card);
-      color: var(--text);
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .notice {
-      margin: 0 0 12px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: var(--warning-soft);
-      color: var(--warning);
-      font-size: 13px;
-      line-height: 1.7;
-      display: none;
-    }
-
-    .notice.show { display: block; }
-
-    .status-row {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      flex-wrap: wrap;
-      padding: 0 0 12px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .status-pill {
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      background: var(--success-soft);
-      color: var(--success);
-      border-radius:999px;
-      padding:8px 12px;
-      font-weight:700;
-    }
-    .status-pill::before {
-      content: "";
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background: var(--success);
-      box-shadow:0 0 0 5px rgba(15,138,86,.12);
-    }
-
-    .service-grid {
-      display:grid;
-      gap:16px;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    }
-
-    .service-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 18px 16px;
-      box-shadow: 0 10px 18px rgba(15,23,42,.04);
-    }
-
-    .service-head {
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom: 10px;
-    }
-
-    .service-head h3 {
-      margin:0;
-      font-size:18px;
-      line-height:1.5;
-    }
-
-    .service-id {
-      flex:none;
-      background: var(--brand-soft);
-      color: var(--brand);
-      border-radius: 10px;
-      padding: 7px 10px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .meta-line {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 14px;
-      line-height:1.8;
-    }
-
-    .facts {
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap:10px;
-    }
-
-    .fact {
-      background: #f8fafc;
-      border: 1px solid #edf2f9;
-      border-radius: 12px;
-      padding: 12px 10px;
-    }
-
-    .fact span { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }
-    .fact strong { font-size:14px; }
-
-    .empty-state {
-      padding: 52px 20px;
-      text-align:center;
-      color: var(--muted);
-      background: rgba(255,255,255,0.28);
-      border: 1px dashed var(--line);
-      border-radius: 18px;
-    }
-
-    .dev-box {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 22px 18px;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .dev-box .badge {
-      display:inline-block;
-      background: var(--warning-soft);
-      color: var(--warning);
-      border-radius:999px;
-      padding:7px 10px;
-      font-weight:800;
-      margin-bottom: 10px;
-      font-size: 12px;
-    }
-
-    .dev-box h3 {
-      margin: 0 0 8px;
-      font-size: 22px;
-      color: var(--text);
-    }
-
-    .dev-box p {
-      margin: 0;
-      line-height: 1.9;
-    }
-
-    .welcome-screen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 28px 18px;
-      background: linear-gradient(180deg, #0b1220 0%, #12305f 100%);
-      color: #fff;
-    }
-
-    .welcome-card {
-      width: min(100%, 460px);
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 26px;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 18px 42px rgba(2,6,23,.25);
-      padding: 20px 18px 18px;
-    }
-
-    .welcome-brand {
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin-bottom: 18px;
-    }
-
-    .welcome-logo {
-      width: 52px;
-      height: 52px;
-      display:grid;
-      place-items:center;
-      border-radius: 16px;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.18);
-      font-weight:900;
-      font-size: 22px;
-    }
-
-    .welcome-brand h2 { margin:0; }
-    .welcome-brand small { color: rgba(255,255,255,.72); }
-
-    .welcome-card h1 {
-      margin: 0 0 10px;
-      font-size: clamp(28px, 7vw, 40px);
-      line-height:1.2;
-    }
-
-    .welcome-card p {
-      margin: 0 0 16px;
-      color: rgba(255,255,255,.85);
-      line-height:1.8;
-    }
-
-    .welcome-actions {
-      display:grid;
-      gap:10px;
-      margin-top: 18px;
-    }
-
-    .primary-action {
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      min-height:52px;
-      border-radius:14px;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: #fff;
-      font-weight:800;
-      border: 0;
-      cursor:pointer;
-    }
-
-    .soft-action {
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      min-height:52px;
-      border-radius:14px;
-      background: rgba(255,255,255,.08);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.12);
-      cursor:pointer;
-      font-weight:700;
-    }
-
-    .subbox {
-      margin-top: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 16px;
-      background: rgba(255,255,255,.03);
-      padding: 12px 12px;
-    }
-
-    .subbox h4 {
-      margin: 0 0 8px;
-      font-size: 15px;
-    }
-
-    .subbox .channel {
-      font-weight:800;
-      color: #fff;
-      letter-spacing: .2px;
-    }
-
-    .hidden { display:none !important; }
-
-    @media (max-width: 620px) {
-      .brand-row { align-items:flex-start; }
-      .lang-switch, .theme-switch { flex-wrap:wrap; }
-      .toolbar { display:block; }
-      .toolbar > * { width:100%; margin-top: 10px; }
-      .facts { grid-template-columns: 1fr; }
-      .mini-stat { width: 100%; }
-    }
-  </style>
-</head>
-<body data-theme="light" data-lang="ar">
-  <div id="welcomeScreen" class="welcome-screen">
-    <div class="welcome-card">
-      <div class="welcome-brand">
-        <div class="welcome-logo">S</div>
-        <div>
-          <h2>Subzo</h2>
-          <small>Digital Growth Platform</small>
-        </div>
-      </div>
-
-      <div class="lang-switch" style="margin-bottom:14px;">
-        <button type="button" class="locale active" data-locale="ar">🇸🇦 عربي</button>
-        <button type="button" class="locale" data-locale="en">🇺🇸 EN</button>
-      </div>
-
-      <div class="theme-switch" style="margin-bottom:14px;">
-        <button type="button" class="theme active" data-theme="light">☀️</button>
-        <button type="button" class="theme" data-theme="dark">🌙</button>
-        <button type="button" class="theme" data-theme="auto">⚙️</button>
-      </div>
-
-      <h1 id="welcomeTitle">مرحبًا بك في منصتنا</h1>
-      <p id="welcomeText">قبل استخدام التطبيق، يجب الاشتراك في قنا��نا الرسمية. بعد التحقق من الاشتراك، يمكنك الدخول إلى خدماتنا داخل Telegram.</p>
-
-      <div class="subbox">
-        <h4 id="channelLabel">القناة الرسمية</h4>
-        <div class="channel">@SubzoOfficial</div>
-      </div>
-
-      <div class="welcome-actions">
-        <a class="primary-action" id="joinChannelBtn" href="https://t.me/SubzoOfficial" target="_blank" rel="noopener">📢 اشترك في القناة</a>
-        <button class="soft-action" id="verifySubBtn" type="button">✅ تحقق من الاشتراك</button>
-      </div>
-
-      <div id="welcomeStatus" style="margin-top:14px; color:#fff; opacity:.9; min-height:24px;"></div>
-    </div>
-  </div>
-
-  <div id="appShell" class="hidden">
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="brand-row">
-          <div class="brand">
-            <div class="logo">S</div>
-            <div>
-              <h3>Subzo</h3>
-              <small id="brandSub">خدمات رقمية أنيقة</small>
-            </div>
-          </div>
-
-          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <div class="lang-switch">
-              <button type="button" class="locale active" data-locale="ar">🇸🇦</button>
-              <button type="button" class="locale" data-locale="en">🇺🇸</button>
-            </div>
-            <div class="theme-switch">
-              <button type="button" class="theme active" data-theme="light">☀️</button>
-              <button type="button" class="theme" data-theme="dark">🌙</button>
-              <button type="button" class="theme" data-theme="auto">⚙️</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="hero">
-          <div class="hero-copy">
-            <div class="chip" id="topChip">⚡ خدمات ��قمية</div>
-            <h1 id="heroTitle">خدمات التسويق</h1>
-            <p id="heroText">منصة عربية/إنجليزية مبنية لعرض خدمات رقمية حقيقية بتجربة سريعة ومريحة داخل Telegram.</p>
-          </div>
-
-          <div class="mini-stat">
-            <span id="statLabel">الخدمات المتاحة</span>
-            <strong id="statCount">0</strong>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <div class="shell">
-      <div class="app-panel">
-        <div class="nav-row">
-          <button class="nav-btn active" data-section="services">🛍️ <span data-i18n="navServices">خدمات التسويق</span></button>
-          <button class="nav-btn" data-section="work">💼 <span data-i18n="navWork">العمل أونلاين</span></button>
-          <button class="nav-btn" data-section="rewards">🎁 <span data-i18n="navRewards">المكافآت</span></button>
-          <button class="nav-btn" data-section="wallet">💰 <span data-i18n="navWallet">المحفظة</span></button>
-          <button class="nav-btn" data-section="orders">📋 <span data-i18n="navOrders">طلباتي</span></button>
-          <button class="nav-btn" data-section="account">👤 <span data-i18n="navAccount">حسابي</span></button>
-          <button class="nav-btn" data-section="support">🎫 <span data-i18n="navSupport">الدعم</span></button>
-          <button class="nav-btn" data-section="settings">⚙️ <span data-i18n="navSettings">الإعدادات</span></button>
-        </div>
-
-        <div id="servicesSection" class="section active">
-          <div class="toolbar">
-            <div class="search-wrap" style="flex:1 1 420px;">
-              <input id="searchInput" type="search" placeholder="ابحث عن خدمة أو تصنيف..." aria-label="البحث" />
-            </div>
-            <button id="loadButton" class="action-btn" type="button">تحميل الخدمات</button>
-            <button id="refreshButton" class="ghost-btn" type="button">تحديث</button>
-          </div>
-
-          <div id="notice" class="notice" aria-live="polite"></div>
-
-          <div class="status-row">
-            <span id="resultsSummary">لم يتم تحميل الخدمات بعد</span>
-            <span class="status-pill">متصل بالخادم</span>
-          </div>
-
-          <div id="servicesList">
-            <div class="empty-state">اضغط على «تحميل الخدمات» لعرض الخدمات الحالية.</div>
-          </div>
-        </div>
-
-        <div id="workSection" class="section">
-          <div class="dev-box">
-            <div class="badge">قيد التطوير</div>
-            <h3 data-i18n="workTitle">العمل أونلاين</h3>
-            <p data-i18n="workText">هذا القسم جاهز للتوسعة لاحقًا مع المهام اليومية، الاستطلاعات، اختبار المواقع والتطبيقات، إدخال البيانات، تقييم المحتوى والمهام التسويقية.</p>
-          </div>
-        </div>
-
-        <div id="rewardsSection" class="section">
-          <div class="dev-box">
-            <div class="badge">قيد التطوير</div>
-            <h3 data-i18n="rewardsTitle">المكافآت</h3>
-            <p data-i18n="rewardsText">نظام المكافآت والإحالات سيتم تطويره لاحقًا وفق نموذج احترافي وقابل للتوسع.</p>
-          </div>
-        </div>
-
-        <div id="walletSection" class="section">
-          <div class="dev-box">
-            <div class="badge">قيد التطوير</div>
-            <h3 data-i18n="walletTitle">المحفظة</h3>
-            <p data-i18n="walletText">نظام الرصيد والإيداع والخصم والسحب والطلبات سيتم تنفيذه بشكل احترافي في مرحلة لاحقة.</p>
-          </div>
-        </div>
-
-        <div id="ordersSection" class="section">
-          <div class="dev-box">
-            <div class="badge">قيد التطوير</div>
-            <h3 data-i18n="ordersTitle">طلباتي</h3>
-            <p data-i18n="ordersText">هذا القسم مخصص لعرض الطلبات المستقبلية بعد اكتمال نظام الطلبات والدفع.</p>
-          </div>
-        </div>
-
-        <div id="accountSection" class="section">
-          <div class="dev-box">
-            <div class="badge">قيد التطوير</div>
-            <h3 data-i18n="accountTitle">حسابي</h3>
-            <p data-i18n="accountText">الملف الشخصي، المعلومات الأساسية، إعدادات الحساب، وسيتم إضافتها تدريجيًا.</p>
-          </div>
-        </div>
-
-        <div id="supportSection" class="section">
-          <div class="dev-box">
-            <div class="badge">قيد التطوير</div>
-            <h3 data-i18n="supportTitle">الدعم</h3>
-            <p data-i18n="supportText">إدارة الطلبات والدعم الفني والإشعارات ستتم لاحقًا داخل النظام.</p>
-          </div>
-        </div>
-
-        <div id="settingsSection" class="section">
-          <div class="dev-box">
-            <div class="badge">قيد التطوير</div>
-            <h3 data-i18n="settingsTitle">الإعدادات</h3>
-            <p data-i18n="settingsText">إدارة اللغة، الثيمات، الإشعارات، الأمان، والملف الشخصي سيتم توسيعها لاحقًا.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script>
-    const tg = window.Telegram && window.Telegram.WebApp;
-    const welcomeScreen = document.getElementById('welcomeScreen');
-    const appShell = document.getElementById('appShell');
-    const searchInput = document.getElementById('searchInput');
-    const loadButton = document.getElementById('loadButton');
-    const refreshButton = document.getElementById('refreshButton');
-    const resultsSummary = document.getElementById('resultsSummary');
-    const statCount = document.getElementById('statCount');
-    const notice = document.getElementById('notice');
-    const servicesList = document.getElementById('servicesList');
-    const welcomeStatus = document.getElementById('welcomeStatus');
-
-    const translations = {
-      ar: {
-        welcomeTitle: 'مرحبًا بك في منصتنا',
-        welcomeText: 'قبل استخدام التطبيق، يجب الاشتراك في قناةنا الرسمية. بعد التحقق من الاشتراك، يمكنك الدخول إلى خدماتنا داخل Telegram.',
-        channelLabel: 'القناة الرسمية',
-        joinChannel: '📢 اشترك في القناة',
-        verify: '✅ تحقق من الاشتراك',
-        navServices: 'خدمات التسويق',
-        navWork: 'العمل أونلاين',
-        navRewards: 'المكافآت',
-        navWallet: 'المحفظة',
-        navOrders: 'طلباتي',
-        navAccount: 'حسابي',
-        navSupport: 'الدعم',
-        navSettings: 'الإعدادات',
-        workTitle: 'العمل أونلاين',
-        workText: 'هذا القسم جاهز للتوسعة لاحقًا مع المهام اليومية، الاستطلاعات، اختبار المواقع والتطبيقات، إدخال البيانات، تقييم المحتوى والمهام التسويقية.',
-        rewardsTitle: 'المكافآت',
-        rewardsText: 'نظام المكافآت والإحالات سيتم تطويره لاحقًا وفق نموذج احترافي وقابل للتوسع.',
-        walletTitle: 'المحفظة',
-        walletText: 'نظام الرصيد والإيداع والخصم والسحب والطلبات سيتم تنفيذه بشكل احترافي في مرحلة لاحقة.',
-        ordersTitle: 'طلباتي',
-        ordersText: 'هذا القسم مخصص لعرض الطلبات المستقبلية بعد اكتمال نظام الطلبات والدفع.',
-        accountTitle: 'حسابي',
-        accountText: 'الملف الشخصي، المعلومات الأساسية، إعدادات الحساب، وسيتم إضافتها تدريجيًا.',
-        supportTitle: 'الدعم',
-        supportText: 'إدارة الطلبات والدعم الفني والإشعارات ستتم لاحقًا داخل النظام.',
-        settingsTitle: 'الإعدادات',
-        settingsText: 'إدارة اللغة، الثيمات، الإشعارات، الأمان، والملف الشخصي سيتم توسيعها لاحقًا.',
-        topChip: '⚡ خدمات رقمية',
-        heroTitle: 'خدمات التسويق',
-        heroText: 'منصة عربية/إنجليزية مبنية لعرض خدمات رقمية حقيقية بتجربة سريعة ومريحة داخل Telegram.',
-        brandSub: 'خدمات رقمية أنيقة',
-        statLabel: 'الخدمات المتاحة',
-        resultsSummaryLoading: 'جارٍ الاتصال بالخادم',
-        noResults: 'لا توجد نتائج مطابقة',
-        servicesEmpty: 'اضغط على «تحميل الخدمات» لعرض الخدمات الحالية.',
-        servicesLoading: 'جارٍ تحميل الخدمات من SMMCPAN...',
-        servicesFetchFail: 'تعذر تحميل الخدمات. يرجى المحاولة مرة أخرى.',
-        successLoad: 'تم تحميل الخدمات بنجاح.'
-      },
-      en: {
-        welcomeTitle: 'Welcome to our platform',
-        welcomeText: 'Before using the app, you must subscribe to our official channel. After verification, you can access our services inside Telegram.',
-        channelLabel: 'Official channel',
-        joinChannel: '📢 Join channel',
-        verify: '✅ Check subscription',
-        navServices: 'Marketing services',
-        navWork: 'Online work',
-        navRewards: 'Rewards',
-        navWallet: 'Wallet',
-        navOrders: 'My orders',
-        navAccount: 'My account',
-        navSupport: 'Support',
-        navSettings: 'Settings',
-        workTitle: 'Online work',
-        workText: 'This section is prepared for future expansion with daily tasks, surveys, website and app testing, data entry, content review, and marketing tasks.',
-        rewardsTitle: 'Rewards',
-        rewardsText: 'The referral and reward system will be developed later using a scalable and professional model.',
-        walletTitle: 'Wallet',
-        walletText: 'Balance, deposits, deductions, withdrawals, and order management will be implemented later.',
-        ordersTitle: 'My orders',
-        ordersText: 'This section is intended for future orders after the order and payment system is completed.',
-        accountTitle: 'My account',
-        accountText: 'Profile, accounts, and user settings will be added gradually.',
-        supportTitle: 'Support',
-        supportText: 'Support tickets, technical assistance, and notifications will be added in a later phase.',
-        settingsTitle: 'Settings',
-        settingsText: 'Language, theme, notification, security, and profile management will be expanded later.',
-        topChip: '⚡ Digital services',
-        heroTitle: 'Marketing services',
-        heroText: 'English/Arabic platform for real digital services with a quick and smooth Telegram experience.',
-        brandSub: 'Elegant digital services',
-        statLabel: 'Available services',
-        resultsSummaryLoading: 'Connecting to server',
-        noResults: 'No matching results',
-        servicesEmpty: 'Press “Load services” to display the catalog.',
-        servicesLoading: 'Loading services from SMMCPAN...',
-        servicesFetchFail: 'Unable to load services. Please try again.',
-        successLoad: 'Services loaded successfully.'
-      }
-    };
-
-    let allServices = [];
-    let currentLang = 'ar';
-    let currentTheme = 'light';
-    let isSubscribed = false;
-
-    function setLocale(locale) {
-      currentLang = locale;
-      document.body.dataset.lang = locale;
-      document.documentElement.lang = locale;
-      document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
-
-      const map = translations[locale];
-      document.getElementById('welcomeTitle').textContent = map.welcomeTitle;
-      document.getElementById('welcomeText').textContent = map.welcomeText;
-      document.getElementById('channelLabel').textContent = map.channelLabel;
-      document.getElementById('joinChannelBtn').textContent = map.joinChannel;
-      document.getElementById('verifySubBtn').textContent = map.verify;
-      document.getElementById('topChip').textContent = map.topChip;
-      document.getElementById('heroTitle').textContent = map.heroTitle;
-      document.getElementById('heroText').textContent = map.heroText;
-      document.getElementById('brandSub').textContent = map.brandSub;
-      document.getElementById('statLabel').textContent = map.statLabel;
-      document.querySelectorAll('[data-i18n]').forEach((element) => {
-        const key = element.dataset.i18n;
-        if (map[key]) element.textContent = map[key];
-      });
-
-      document.querySelectorAll('.locale').forEach((el) => {
-        el.classList.toggle('active', el.dataset.locale === locale);
-      });
-
-      if (document.getElementById('searchInput')) {
-        const placeholderText = locale === 'ar' ? 'ابحث عن خدمة أو تصنيف...' : 'Search by service name or category...';
-        document.getElementById('searchInput').placeholder = placeholderText;
-      }
-    }
-
-    function setTheme(mode) {
-      currentTheme = mode;
-      document.body.dataset.theme = mode;
-      document.querySelectorAll('.theme').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.theme === mode);
-      });
-    }
-
-    function showNotice(message, type = 'info') {
-      if (!message) {
-        notice.textContent = '';
-        notice.classList.remove('show');
-        return;
-      }
-      notice.textContent = message;
-      notice.classList.add('show');
-      notice.style.background = type === 'error' ? 'var(--danger-soft)' : 'var(--warning-soft)';
-      notice.style.color = type === 'error' ? 'var(--danger)' : 'var(--warning)';
-    }
-
-    function formatNumber(value) {
-      const num = Number(value || 0);
-      return Number.isFinite(num) ? num.toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US') : '0';
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>"']/g, (c) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[c]));
-    }
-
-    function renderServices() {
-      const query = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
-      const filtered = allServices.filter((service) => {
-        const haystack = `${service.name || ''} ${service.category || ''} ${service.service || ''}`.toLowerCase();
-        return haystack.includes(query);
-      });
-
-      statCount.textContent = String(allServices.length || 0);
-      if (!filtered.length) {
-        resultsSummary.textContent = currentLang === 'ar' ? 'لا توجد نتائج مطابقة' : 'No matching results';
-        servicesList.innerHTML = '<div class="empty-state">' + (currentLang === 'ar' ? 'لا توجد نتائج مطابقة للبحث الحالي.' : 'No results match the current search.') + '</div>';
-        return;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>خدمات SMMCPAN</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --card: #ffffff;
+        --border: #e7edf7;
+        --text: #1e2a39;
+        --muted: #64748b;
+        --primary: #2f6df6;
+        --primary-soft: #eaf1ff;
+        --success: #0d9488;
+        --warning: #fff7d6;
+        --danger: #e11d48;
       }
 
-      resultsSummary.textContent = currentLang === 'ar' ? `عرض ${filtered.length} خدمة` : `Showing ${filtered.length} services`;
-      servicesList.innerHTML = `
-        <div class="service-grid">
-          ${filtered.map((service) => `
-            <article class="service-card">
-              <div class="service-head">
-                <h3>${escapeHtml(service.name || 'Service')}</h3>
-                <span class="service-id">#${escapeHtml(service.service || '')}</span>
-              </div>
-              <div class="meta-line">${currentLang === 'ar' ? 'التصنيف' : 'Category'}: ${escapeHtml(service.category || 'General')}</div>
-              <div class="facts">
-                <div class="fact">
-                  <span>${currentLang === 'ar' ? 'السعر الأصلي' : 'Original price'}</span>
-                  <strong>${formatNumber(service.price)} ${currentLang === 'ar' ? 'ر.س' : 'SAR'}</strong>
-                </div>
-                <div class="fact">
-                  <span>${currentLang === 'ar' ? 'السعر للمستخدم' : 'User price'}</span>
-                  <strong>${formatNumber(service.selling_price ?? service.price * 1.1)} ${currentLang === 'ar' ? 'ر.س' : 'SAR'}</strong>
-                </div>
-                <div class="fact">
-                  <span>${currentLang === 'ar' ? 'الحد الأدنى' : 'Minimum'}</span>
-                  <strong>${formatNumber(service.min)}</strong>
-                </div>
-                <div class="fact">
-                  <span>${currentLang === 'ar' ? 'الحد الأقصى' : 'Maximum'}</span>
-                  <strong>${formatNumber(service.max)}</strong>
-                </div>
-              </div>
-            </article>
-          `).join('')}
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Tahoma, Arial, sans-serif;
+      }
+
+      body {
+        padding: 18px;
+      }
+
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        font-size: clamp(24px, 4vw, 32px);
+        margin: 0 0 8px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 0 0 14px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        min-height: 46px;
+        padding: 0 16px;
+        background: var(--primary);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 15px;
+      }
+
+      button:hover {
+        opacity: 0.98;
+      }
+
+      .notice {
+        margin-top: 14px;
+        background: var(--warning);
+        border: 1px solid #f7e7a5;
+        color: #7a5a00;
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: none;
+        line-height: 1.6;
+      }
+
+      .notice.show {
+        display: block;
+      }
+
+      .empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 24px 10px 6px;
+      }
+
+      .services {
+        display: grid;
+        gap: 12px;
+      }
+
+      .service-card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        background: #fdfdff;
+      }
+
+      .service-name {
+        font-size: 18px;
+        margin: 0 0 8px;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .meta span {
+        display: block;
+      }
+
+      .strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      @media (max-width: 480px) {
+        body { padding: 12px; }
+        .panel { padding: 16px; }
+        .meta { grid-template-columns: 1fr; }
+        button { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="panel">
+        <span class="tag">Telegram Mini App</span>
+        <h1>خدمات SMMCPAN</h1>
+        <p class="subtitle">عرض الخدمات المتاحة من الموقع الرسمي فقط. لا توجد طلبات أو دفع أو حسابات داخل التطبيق في هذه المرحلة.</p>
+        <div class="actions">
+          <button id="loadServices">تحميل الخدمات</button>
         </div>
-      `;
-    }
+        <div id="message" class="notice"></div>
+      </section>
 
-    async function loadServices() {
-      loadButton.disabled = true;
-      refreshButton.disabled = true;
-      loadButton.textContent = currentLang === 'ar' ? 'جارٍ التحميل...' : 'Loading...';
-      servicesList.innerHTML = '<div class="empty-state">' + (currentLang === 'ar' ? 'جارٍ تحميل الخدمات من SMMCPAN...' : 'Loading services from SMMCPAN...') + '</div>';
-      resultsSummary.textContent = currentLang === 'ar' ? 'جارٍ الاتصال بالخادم' : 'Connecting to server';
-      showNotice('');
+      <section class="panel">
+        <div id="services" class="empty">اضغط على زر «تحميل الخدمات» لعرض البيانات.</div>
+      </section>
+    </main>
 
-      try {
-        const response = await fetch('/api/services');
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Unable to load services');
-
-        allServices = Array.isArray(data.services) ? data.services : [];
-        renderServices();
-        showNotice(currentLang === 'ar' ? `تم تحميل ${allServices.length} خدمة بنجاح.` : `Loaded ${allServices.length} services successfully.`);
-      } catch (error) {
-        servicesList.innerHTML = '<div class="empty-state">' + (currentLang === 'ar' ? 'تعذر تحميل الخدمات. يرجى المحاولة مرة أخرى.' : 'Unable to load services. Please try again.') + '</div>';
-        resultsSummary.textContent = currentLang === 'ar' ? 'فشل التحميل' : 'Load failed';
-        showNotice(error.message || 'Unexpected error', 'error');
-      } finally {
-        loadButton.disabled = false;
-        refreshButton.disabled = false;
-        loadButton.textContent = currentLang === 'ar' ? 'تحميل الخدمات' : 'Load services';
-      }
-    }
-
-    document.getElementById('loadButton').addEventListener('click', loadServices);
-    document.getElementById('refreshButton').addEventListener('click', loadServices);
-    searchInput.addEventListener('input', renderServices);
-
-    document.querySelectorAll('.locale').forEach((button) => {
-      button.addEventListener('click', () => setLocale(button.dataset.locale));
-    });
-
-    document.querySelectorAll('.theme').forEach((button) => {
-      button.addEventListener('click', () => setTheme(button.dataset.theme));
-    });
-
-    document.querySelectorAll('.nav-btn').forEach((button) => {
-      button.addEventListener('click', () => {
-        document.querySelectorAll('.nav-btn').forEach((el) => el.classList.toggle('active', el === button));
-        document.querySelectorAll('.section').forEach((el) => el.classList.toggle('active', el.id === button.dataset.section + 'Section'));
-      });
-    });
-
-    async function verifySub() {
-      if (!tg || !tg.initData) {
-        welcomeStatus.textContent = currentLang === 'ar' ? 'افتح التطبيق داخل Telegram لإجراء التحقق الحقيقي.' : 'Open the app inside Telegram to perform a real verification.';
-        welcomeStatus.style.color = 'rgba(255,255,255,.9)';
-        return;
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+      const tg = window.Telegram && window.Telegram.WebApp;
+      if (tg) {
+        tg.ready();
+        tg.expand();
       }
 
-      welcomeStatus.textContent = currentLang === 'ar' ? 'جارٍ التحقق من الاشتراك...' : 'Checking subscription...';
-      try {
-        const response = await fetch('/api/telegram/check-subscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData: tg.initData })
-        });
+      const servicesContainer = document.getElementById('services');
+      const messageBox = document.getElementById('message');
 
-        const data = await response.json();
-
-        if (!response.ok || !data.subscribed) {
-          welcomeStatus.textContent = currentLang === 'ar' ? 'يجب الاشتراك في @SubzoOfficial قبل الدخول.' : 'You must subscribe to @SubzoOfficial before accessing the app.';
-          welcomeStatus.style.color = '#ffd6d6';
+      function setMessage(text, isError = false) {
+        if (!text) {
+          messageBox.classList.remove('show');
+          messageBox.textContent = '';
           return;
         }
 
-        welcomeStatus.textContent = currentLang === 'ar' ? 'تم التحقق بنجاح. جاري الدخول...' : 'Subscription verified successfully. Loading app...';
-        welcomeStatus.style.color = '#dfffe7';
-        welcomeScreen.classList.add('hidden');
-        appShell.classList.remove('hidden');
-        loadServices();
-      } catch (error) {
-        welcomeStatus.textContent = currentLang === 'ar' ? 'تعذر التحقق. حاول مرة أخرى.' : 'Verification failed. Please try again.';
-        welcomeStatus.style.color = '#ffd6d6';
+        messageBox.textContent = text;
+        messageBox.classList.add('show');
+        messageBox.style.borderColor = isError ? '#fecdd3' : '#f7e7a5';
+        messageBox.style.background = isError ? '#fff1f2' : '#fff7d6';
+        messageBox.style.color = isError ? '#9f1239' : '#7a5a00';
       }
-    }
 
-    document.getElementById('verifySubBtn').addEventListener('click', verifySub);
-
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      if (tg.initData) {
-        verifySub();
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[char]));
       }
-    }
 
-    setLocale('ar');
-    setTheme('light');
-  </script>
-</body>
+      function renderServices(items) {
+        if (!items.length) {
+          servicesContainer.className = 'empty';
+          servicesContainer.textContent = 'لا توجد خدمات متاحة في الوقت الحالي.';
+          return;
+        }
+
+        servicesContainer.className = 'services';
+        servicesContainer.innerHTML = items.map((service) => `
+          <article class="service-card">
+            <h2 class="service-name">${escapeHtml(service.name || 'خدمة بدون اسم')}</h2>
+            <div class="meta">
+              <span>رقم الخدمة: <span class="strong">${escapeHtml(service.service || '-')}</span></span>
+              <span>التصنيف: <span class="strong">${escapeHtml(service.category || 'عام')}</span></span>
+              <span>السعر الأصلي: <span class="strong">${Number(service.price || 0).toLocaleString('ar-SA')}</span></span>
+              <span>الحد الأدنى: <span class="strong">${Number(service.min || 0).toLocaleString('ar-SA')}</span></span>
+              <span>الحد الأقصى: <span class="strong">${Number(service.max || 0).toLocaleString('ar-SA')}</span></span>
+            </div>
+          </article>
+        `).join('');
+      }
+
+      async function loadServices() {
+        servicesContainer.className = 'empty';
+        servicesContainer.textContent = 'جاري تحميل الخدمات...';
+        setMessage('');
+
+        try {
+          const response = await fetch('/api/services');
+          const payload = await response.json();
+
+          if (!response.ok) {
+            throw new Error(payload?.message || 'تعذر تحميل الخدمات');
+          }
+
+          const services = Array.isArray(payload.services) ? payload.services : [];
+          renderServices(services);
+          setMessage(`تم تحميل ${services.length} خدمة بنجاح.`);
+        } catch (error) {
+          servicesContainer.className = 'empty';
+          servicesContainer.textContent = 'تعذر تحميل الخدمات.';
+          setMessage(error.message || 'حدث خطأ غير متوقع.', true);
+        }
+      }
+
+      document.getElementById('loadServices').addEventListener('click', loadServices);
+    </script>
+  </body>
 </html>

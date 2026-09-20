@@ -3,237 +3,156 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const axios = require('axios');
-const crypto = require('crypto');
 const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
 const WEBAPP_URL = (process.env.TELEGRAM_WEBAPP_URL || '').trim();
-const CHANNEL_USERNAME = (process.env.TELEGRAM_CHANNEL_USERNAME || 'SubzoOfficial').replace(/^@/, '').trim();
 const SMMCPAN_API_URL = (process.env.SMMCPAN_API_URL || 'https://smmcpan.com/api/v2').trim().replace(/\/$/, '');
 const SMMCPAN_API_KEY = (process.env.SMMCPAN_API_KEY || '').trim();
-const PLATFORM_MARGIN_RATE = Number(process.env.PLATFORM_MARGIN_RATE || 0.1);
-const SERVICES_CACHE_MS = 5 * 60 * 1000;
-
-let servicesCache = { expiresAt: 0, services: [] };
-let servicesRequest = null;
 
 app.disable('x-powered-by');
-app.use(express.json({ limit: '200kb' }));
-app.use(express.urlencoded({ extended: true }));
-
-const publicDir = path.join(__dirname, 'public');
-app.use(express.static(publicDir, { maxAge: '1h', index: 'index.html' }));
-
-function numericValue(value) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
+app.use(express.json({ limit: '100kb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 function normalizeService(rawService) {
-  if (!rawService || typeof rawService !== 'object') return null;
-
-  const serviceId = rawService.service ?? rawService.service_id ?? rawService.id ?? rawService.serviceId;
-  if (serviceId === undefined || serviceId === null || String(serviceId).trim() === '') return null;
-
-  const basePrice = numericValue(rawService.price ?? rawService.rate ?? rawService.cost ?? rawService.original_price);
-  const min = numericValue(rawService.min ?? rawService.minimum ?? rawService.min_amount);
-  const max = numericValue(rawService.max ?? rawService.maximum ?? rawService.max_amount);
-  const sellingPrice = basePrice > 0 ? basePrice * (1 + PLATFORM_MARGIN_RATE) : 0;
+  const serviceId = rawService?.service ?? rawService?.id ?? rawService?.service_id ?? rawService?.code ?? '';
+  const name = rawService?.name || rawService?.title || 'خدمة بدون اسم';
+  const category = rawService?.category || rawService?.category_name || rawService?.type || 'عام';
+  const originalPrice = Number(rawService?.rate ?? rawService?.price ?? rawService?.original_price ?? 0);
+  const min = Number(rawService?.min ?? rawService?.min_amount ?? 0);
+  const max = Number(rawService?.max ?? rawService?.max_amount ?? 0);
 
   return {
     service: String(serviceId),
-    name: String(rawService.name || rawService.title || rawService.service_name || 'خدمة بدون اسم'),
-    category: String(rawService.category || rawService.category_name || rawService.type || 'عام'),
-    price: basePrice,
-    selling_price: sellingPrice,
-    min,
-    max
+    name,
+    category: String(category),
+    price: Number.isFinite(originalPrice) ? originalPrice : 0,
+    min: Number.isFinite(min) ? min : 0,
+    max: Number.isFinite(max) ? max : 0,
   };
 }
 
-function extractServices(payload) {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.services)) return payload.services;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-}
-
-async function requestServices() {
-  if (Date.now() < servicesCache.expiresAt) return servicesCache.services;
-  if (servicesRequest) return servicesRequest;
-
-  servicesRequest = axios.post(
+async function fetchServicesFromSmmcpan() {
+  const response = await axios.post(
     SMMCPAN_API_URL,
-    { action: 'services', key: SMMCPAN_API_KEY },
+    {
+      action: 'services',
+      key: SMMCPAN_API_KEY,
+    },
     {
       timeout: 20000,
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-      validateStatus: (status) => status >= 200 && status < 300
-    }
-  ).then(({ data }) => {
-    const services = extractServices(data).map(normalizeService).filter(Boolean);
-    servicesCache = { services, expiresAt: Date.now() + SERVICES_CACHE_MS };
-    return services;
-  }).finally(() => {
-    servicesRequest = null;
-  });
-
-  return servicesRequest;
-}
-
-function parseTelegramInitData(initData) {
-  if (!initData || typeof initData !== 'string') return null;
-
-  const params = new URLSearchParams(initData);
-  const hash = params.get('hash');
-  if (!hash || !BOT_TOKEN) return null;
-
-  const entries = [];
-  for (const [key, value] of params.entries()) {
-    if (key !== 'hash') entries.push([key, value]);
-  }
-  entries.sort(([a], [b]) => a.localeCompare(b));
-
-  const dataCheckString = entries.map(([key, value]) => `${key}=${value}`).join('\n');
-  const secretKey = crypto.createHash('sha256').update(BOT_TOKEN).digest();
-  const computed = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
-
-  if (computed !== hash) return null;
-
-  const userValue = params.get('user');
-  if (!userValue) return null;
-
-  try {
-    return JSON.parse(userValue);
-  } catch {
-    return null;
-  }
-}
-
-async function checkChannelSubscription(userId) {
-  if (!BOT_TOKEN || !userId) return false;
-
-  try {
-    const response = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember`, {
-      params: {
-        chat_id: `@${CHANNEL_USERNAME}`,
-        user_id: userId
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
-      timeout: 15000
-    });
+    }
+  );
 
-    const status = response.data?.result?.status;
-    return ['member', 'administrator', 'creator'].includes(status);
-  } catch (error) {
-    console.error('Telegram subscription check error:', error.response?.data || error.message);
-    return false;
+  const payload = response?.data;
+  let serviceList = [];
+
+  if (Array.isArray(payload)) {
+    serviceList = payload;
+  } else if (Array.isArray(payload?.services)) {
+    serviceList = payload.services;
+  } else if (Array.isArray(payload?.data)) {
+    serviceList = payload.data;
+  } else if (Array.isArray(payload?.result)) {
+    serviceList = payload.result;
   }
+
+  return serviceList.filter((item) => item && !item.error).map(normalizeService);
 }
 
-app.get('/health', (_req, res) => {
+app.get('/health', (req, res) => {
   res.status(200).json({
     ok: true,
-    app: 'subzo-miniapp',
+    service: 'telegram-mini-app',
+    telegramBotConfigured: Boolean(BOT_TOKEN),
+    webAppUrlConfigured: Boolean(WEBAPP_URL),
+    smmcpanApiConfigured: Boolean(SMMCPAN_API_KEY),
+    endpoint: '/api/services',
+  });
+});
+
+app.get('/api/services', async (req, res) => {
+  if (!SMMCPAN_API_URL) {
+    return res.status(500).json({ ok: false, message: 'SMMCPAN_API_URL is not configured.' });
+  }
+
+  if (!SMMCPAN_API_KEY) {
+    return res.status(503).json({ ok: false, message: 'SMMCPAN_API_KEY is not configured.' });
+  }
+
+  try {
+    const services = await fetchServicesFromSmmcpan();
+    return res.json({
+      ok: true,
+      count: services.length,
+      services,
+    });
+  } catch (error) {
+    const providerMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Unable to fetch services.';
+    console.error('SMMCPAN services fetch failed:', providerMessage);
+    return res.status(502).json({
+      ok: false,
+      message: 'تعذر تحميل الخدمات من SMMCPAN في الوقت الحالي.',
+      details: providerMessage,
+    });
+  }
+});
+
+app.get('/api/config', (req, res) => {
+  res.json({
+    ok: true,
     telegramBotConfigured: Boolean(BOT_TOKEN),
     telegramWebAppConfigured: Boolean(WEBAPP_URL),
     smmcpanConfigured: Boolean(SMMCPAN_API_KEY),
-    servicesEndpoint: '/api/services',
-    channelCheckEndpoint: '/api/telegram/check-subscription'
   });
-});
-
-app.post('/api/telegram/check-subscription', async (req, res) => {
-  const initData = String(req.body.initData || '').trim();
-  const user = parseTelegramInitData(initData);
-
-  if (!BOT_TOKEN) {
-    return res.status(503).json({ ok: false, message: 'TELEGRAM_BOT_TOKEN غير موجود.' });
-  }
-
-  if (!user || !user.id) {
-    return res.status(400).json({ ok: false, message: 'لا توجد بيانات Telegram صالحة داخل التطبيق.' });
-  }
-
-  try {
-    const subscribed = await checkChannelSubscription(user.id);
-    return res.json({
-      ok: true,
-      subscribed,
-      user: {
-        id: user.id,
-        username: user.username || null,
-        first_name: user.first_name || null,
-        last_name: user.last_name || null
-      },
-      channel: `@${CHANNEL_USERNAME}`
-    });
-  } catch (error) {
-    return res.status(500).json({ ok: false, message: 'تعذر التحقق من الاشتراك.' });
-  }
-});
-
-app.get('/api/services', async (_req, res) => {
-  if (!SMMCPAN_API_KEY) {
-    return res.status(503).json({ ok: false, message: 'SMMCPAN_API_KEY غير موجود في متغيرات البيئة.' });
-  }
-
-  try {
-    const services = await requestServices();
-    const response = services.map((service) => ({
-      ...service,
-      selling_price: Number(service.selling_price || (service.price * (1 + PLATFORM_MARGIN_RATE)))
-    }));
-
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
-    return res.json({ ok: true, source: 'SMMCPAN', count: response.length, margin_rate: PLATFORM_MARGIN_RATE, services: response });
-  } catch (error) {
-    console.error('SMMCPAN service fetch failed:', error.response?.data || error.message);
-    return res.status(502).json({ ok: false, message: 'تعذر الاتصال بـ SMMCPAN في الوقت الحالي.' });
-  }
-});
-
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
-});
-
-app.get('/index.html', (_req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 app.use((req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-if (BOT_TOKEN && WEBAPP_URL) {
+if (BOT_TOKEN) {
   const bot = new TelegramBot(BOT_TOKEN, { polling: true });
-  bot.on('polling_error', (error) => console.error('Telegram polling error:', error.message));
 
-  bot.onText(/^\/(start|help)(?:@[^\s]+)?$/i, async (msg) => {
+  bot.on('polling_error', (error) => {
+    console.error('Telegram polling error:', error.message || error);
+  });
+
+  bot.onText(/^(?:\/start|\/help)(?:@\S+)?$/i, async (msg) => {
+    const keyboard = {
+      reply_markup: {
+        inline_keyboard: [[{ text: 'فتح التطبيق', web_app: { url: WEBAPP_URL || 'https://example.com' } }]],
+      },
+    };
+
     try {
-      await bot.sendMessage(msg.chat.id, 'مرحبًا بك في Subzo\nاضغط الزر لفتح التطبيق والحصول على الخدمات.', {
-        parse_mode: 'HTML',
-        reply_markup: {
-          inline_keyboard: [[{ text: 'فتح التطبيق', web_app: { url: WEBAPP_URL } }]]
-        }
-      });
+      await bot.sendMessage(msg.chat.id, 'مرحباً بك في التطبيق. اضغط الزر لفتح الخدمات.', keyboard);
     } catch (error) {
-      console.error('Telegram bot sendMessage error:', error.message);
+      console.error('Could not send Telegram startup message:', error.message || error);
     }
   });
 
-  console.log(`Telegram bot started. WebApp URL: ${WEBAPP_URL}`);
-} else {
-  console.warn('Bot is disabled until TELEGRAM_BOT_TOKEN and TELEGRAM_WEBAPP_URL are configured.');
+  bot.setMyCommands([
+    { command: 'start', description: 'فتح التطبيق' },
+    { command: 'help', description: 'مساعدة' },
+  ]).catch((error) => {
+    console.error('Unable to set Telegram commands:', error.message || error);
+  });
 }
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mini app running on 0.0.0.0:${PORT}`);
-  console.log(`Health check: http://0.0.0.0:${PORT}/health`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Health endpoint: http://0.0.0.0:${PORT}/health`);
+  console.log(`Services endpoint: http://0.0.0.0:${PORT}/api/services`);
 });
 
 server.on('error', (error) => {
-  console.error('Server error:', error);
+  console.error('HTTP server error:', error);
   process.exit(1);
 });
