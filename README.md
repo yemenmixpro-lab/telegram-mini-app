@@ -1,395 +1,48 @@
 # Telegram Mini App
 
-تطبيق Telegram Mini App بسيط ومخصص لعرض خدمات SMMCPAN فقط، جاهز للنشر على Railway.
+واجهة Telegram Mini App عربية وسريعة لعرض كتالوج خدمات SMMCPAN، ومجهزة للعمل على Railway.
 
-## ما يتضمن هذا المشروع
+## الوظائف الحالية
 
-- واجهة عربية RTL متوافقة مع Telegram
-- زر واضح: "تحميل الخدمات"
-- API داخلي: `GET /api/services`
-- ربط بالخادم الخارجي: `https://smmcpan.com/api/v2`
-- استخدام متغيرات ENV فقط:
-  - `TELEGRAM_BOT_TOKEN`
-  - `TELEGRAM_WEBAPP_URL`
-  - `SMMCPAN_API_URL`
-  - `SMMCPAN_API_KEY`
-- لا يتم إرسال `SMMCPAN_API_KEY` إلى الواجهة أو Telegram
-- عرض البيانات التالية فقط:
-  - اسم الخدمة
-  - رقم الخدمة
-  - التصنيف
-  - السعر الأصلي
-  - الحد الأدنى
-  - الحد الأقصى
+- واجهة RTL متجاوبة مع الهاتف وTelegram WebApp.
+- تحميل الخدمات من SMMCPAN عبر `GET /api/services`.
+- بحث فوري بالاسم أو التصنيف أو رقم الخدمة.
+- عرض اسم الخدمة، الرقم، التصنيف، السعر الأصلي، الحد الأدنى والحد الأقصى.
+- تخزين مؤقت للخدمات لمدة خمس دقائق لتقليل الضغط وتسريع الاستخدام.
+- حماية `SMMCPAN_API_KEY` داخل الخادم وعدم إرساله إلى الواجهة أو Telegram.
+- زر `/start` في Telegram لفتح الـMini App.
 
-## متغيرات البيئة
+## متغيرات Railway
 
 ```env
-PORT=3000
 TELEGRAM_BOT_TOKEN=
-TELEGRAM_WEBAPP_URL=https://your-railway-app.up.railway.app
+TELEGRAM_WEBAPP_URL=https://your-railway-domain.up.railway.app
 SMMCPAN_API_URL=https://smmcpan.com/api/v2
 SMMCPAN_API_KEY=
 ```
 
-## نقاط النهاية
+يستخدم التطبيق `PORT` الذي توفره Railway تلقائيًا، ويمكن ضبطه محليًا عند الحاجة.
 
-- `GET /health`
-- `GET /api/services`
-
-## التشغيل محليًا
+## التشغيل
 
 ```bash
 npm install
 npm start
 ```
 
-## النشر على Railway
+اختبر:
 
-1. أضف المتغيرات المذكورة أعلاه في Railway.
-2. تأكد أن `SMMCPAN_API_URL` يساوي `https://smmcpan.com/api/v2`.
-3. ربط المشروع بــ Railway وابدأ النشر.
-4. أضف رابط التطبيق في Telegram WebApp باستخدام `TELEGRAM_WEBAPP_URL`.
+- `/health`
+- `/api/services`
 
-## ملاحظات مهمة
+## Railway
 
-- لا توجد ميزات للدخول أو الرصيد أو الدفع أو الطلبات أو العروض.
-- لا يوجد POST إلى `/api/orders` في هذه المرحلة.
-- المشروع مصمم ليكون بسيطًا ونظيفًا وقابلًا للتشغيل مباشرة على Railway.
+1. اربط المشروع `yemenmixpro-lab/telegram-mini-app`.
+2. أنشئ Domain للخدمة من Networking.
+3. ضع رابط Domain في `TELEGRAM_WEBAPP_URL`.
+4. أضف `TELEGRAM_BOT_TOKEN` و`SMMCPAN_API_KEY` وباقي المتغيرات.
+5. أعد النشر ثم افتح رابط Domain.
 
+## النطاق
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+هذا الإصدار مخصص لعرض الخدمات فقط. لا يحتوي على تسجيل دخول أو رصيد أو دفع أو إنشاء طلبات أو إحالات أو مكافآت أو لوحة إدارة.
