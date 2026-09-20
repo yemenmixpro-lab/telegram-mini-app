@@ -13,7 +13,6 @@ const railwayDomain = (process.env.RAILWAY_PUBLIC_DOMAIN || '').trim();
 const WEBAPP_URL = configuredWebAppUrl || (railwayDomain ? `https://${railwayDomain}` : 'https://telegram-mini-app-production-a7ba.up.railway.app');
 const SMMCPAN_API_URL = (process.env.SMMCPAN_API_URL || 'https://smmcpan.com/api/v2').trim().replace(/\/$/, '');
 const SMMCPAN_API_KEY = (process.env.SMMCPAN_API_KEY || '').trim();
-const PRICE_MARKUP = 1.10;
 
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -26,14 +25,12 @@ function providerRequest(data) {
 }
 
 function publicService(service) {
-  const baseRate = Number(service.rate);
   return {
     service: service.service,
-    name: service.name,
-    type: service.type,
-    category: service.category,
-    rate: Number.isFinite(baseRate) ? Number((baseRate * PRICE_MARKUP).toFixed(4)) : service.rate,
-    providerRate: service.rate,
+    name: service.name || 'خدمة بدون اسم',
+    type: service.type || '',
+    category: service.category || 'عام',
+    rate: service.rate,
     min: service.min,
     max: service.max,
     refill: service.refill,
@@ -47,27 +44,43 @@ app.get('/health', (req, res) => {
     service: 'telegram-mini-app',
     telegramBotConfigured: Boolean(BOT_TOKEN),
     webAppUrlConfigured: Boolean(WEBAPP_URL),
-    webAppUrlSource: configuredWebAppUrl ? 'TELEGRAM_WEBAPP_URL' : (railwayDomain ? 'RAILWAY_PUBLIC_DOMAIN' : 'fallback'),
     smmcpanConfigured: Boolean(SMMCPAN_API_KEY),
-    markupPercent: 10
+    servicesEndpoint: '/api/services'
   });
 });
 
 app.get('/api/config', (req, res) => {
-  res.json({ ok: true, markupPercent: 10, smmcpanConfigured: Boolean(SMMCPAN_API_KEY) });
+  res.json({ ok: true, smmcpanConfigured: Boolean(SMMCPAN_API_KEY) });
 });
 
+// Read-only integration test: retrieves the real service list from SMMCPAN.
 app.get('/api/services', async (req, res) => {
-  if (!SMMCPAN_API_KEY) return res.status(503).json({ ok: false, message: 'SMMCPAN_API_KEY is not configured.' });
+  if (!SMMCPAN_API_KEY) {
+    return res.status(503).json({ ok: false, message: 'SMMCPAN_API_KEY is not configured in Railway.' });
+  }
+
   try {
     const response = await providerRequest({ action: 'services' });
-    if (!Array.isArray(response.data)) {
+    const providerServices = Array.isArray(response.data)
+      ? response.data
+      : (Array.isArray(response.data?.services) ? response.data.services : null);
+
+    if (!providerServices) {
       return res.status(502).json({ ok: false, message: 'Unexpected services response from SMMCPAN.', details: response.data });
     }
-    const services = response.data.filter((item) => !item.error).map(publicService);
-    res.json({ ok: true, markupPercent: 10, services });
+
+    return res.json({
+      ok: true,
+      source: 'SMMCPAN',
+      count: providerServices.length,
+      services: providerServices.filter((item) => item && !item.error).map(publicService)
+    });
   } catch (error) {
-    res.status(502).json({ ok: false, message: 'Unable to load services from SMMCPAN.', details: error.response?.data || error.message });
+    return res.status(502).json({
+      ok: false,
+      message: 'Unable to load services from SMMCPAN.',
+      details: error.response?.data || error.message
+    });
   }
 });
 
@@ -81,10 +94,9 @@ app.get('/api/smmcpan/status', async (req, res) => {
   }
 });
 
-// Ordering is intentionally not enabled yet: there is no user payment/credit system.
-// This prevents anonymous visitors from spending the provider account balance.
+// Deliberately disabled: this phase is read-only and cannot spend provider balance.
 app.post('/api/orders', (req, res) => {
-  res.status(501).json({ ok: false, message: 'Ordering is disabled until a payment or user-credit system is added.' });
+  res.status(501).json({ ok: false, message: 'Ordering is disabled in the connection-test phase.' });
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));

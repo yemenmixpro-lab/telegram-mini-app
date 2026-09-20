@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>خدمات التواصل</title>
+  <title>خدمات SMMCPAN</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; padding: 18px; background: #f4f7fb; color: #172033; font-family: Tahoma, Arial, sans-serif; }
@@ -29,15 +29,15 @@
 <body>
   <main>
     <header>
-      <span class="tag">Telegram Mini App</span>
+      <span class="tag">اتصال مباشر بـ SMMCPAN</span>
       <h1>الخدمات المتاحة</h1>
-      <p>الخدمات معروضة مباشرة من SMMCPAN، والأسعار الظاهرة تشمل زيادة 10%.</p>
+      <p>هذه شاشة قراءة فقط لاختبار الاتصال وجلب الخدمات الحقيقية. لا توجد طلبات أو عمليات دفع في هذه المرحلة.</p>
       <div class="toolbar"><button id="load">تحميل الخدمات</button></div>
       <div id="message" class="notice" hidden></div>
     </header>
     <section class="panel">
       <div class="toolbar"><input id="search" placeholder="ابحث عن خدمة أو تصنيف" /><button id="refresh" class="secondary">تحديث</button></div>
-      <div id="services" class="empty">اضغط «تحميل الخدمات» لعرض الخدمات الحقيقية.</div>
+      <div id="services" class="empty">اضغط «تحميل الخدمات» لعرض الخدمات القادمة من SMMCPAN.</div>
     </section>
   </main>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -49,18 +49,26 @@
     const search = document.getElementById('search');
     let allServices = [];
     function showMessage(text) { message.hidden = !text; message.textContent = text || ''; }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
     function render() {
       const q = search.value.trim().toLowerCase();
       const items = allServices.filter(s => `${s.name} ${s.category} ${s.type}`.toLowerCase().includes(q));
       if (!items.length) { list.className = 'empty'; list.textContent = 'لا توجد نتائج.'; return; }
       list.className = '';
-      list.innerHTML = items.map(s => `<article class="service"><h3>${escapeHtml(s.name)}</h3><small>التصنيف: ${escapeHtml(s.category || 'عام')}</small><small>السعر بعد الزيادة: ${escapeHtml(String(s.rate))} لكل 1000</small><small>الحد الأدنى: ${escapeHtml(String(s.min))} — الحد الأقصى: ${escapeHtml(String(s.max))}</small></article>`).join('');
+      list.innerHTML = items.map(s => `<article class="service"><h3>${escapeHtml(s.name)}</h3><small>رقم الخدمة: ${escapeHtml(s.service)}</small><small>التصنيف: ${escapeHtml(s.category)}</small><small>السعر الأصلي من SMMCPAN: ${escapeHtml(s.rate)} لكل 1000</small><small>الحد الأدنى: ${escapeHtml(s.min)} — الحد الأقصى: ${escapeHtml(s.max)}</small></article>`).join('');
     }
-    function escapeHtml(value) { return value.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
     async function loadServices() {
-      list.className = 'empty'; list.textContent = 'جاري تحميل الخدمات...'; showMessage('');
-      try { const r = await fetch('/api/services'); const data = await r.json(); if (!r.ok) throw new Error(data.message || 'تعذر تحميل الخدمات'); allServices = data.services || []; render(); }
-      catch (e) { list.className = 'empty'; list.textContent = 'تعذر تحميل الخدمات.'; showMessage(e.message); }
+      list.className = 'empty'; list.textContent = 'جاري الاتصال بـ SMMCPAN وتحميل الخدمات...'; showMessage('');
+      try {
+        const response = await fetch('/api/services');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'تعذر تحميل الخدمات');
+        allServices = data.services || [];
+        showMessage(`تم الاتصال بنجاح. عدد الخدمات: ${data.count ?? allServices.length}`);
+        render();
+      } catch (error) {
+        list.className = 'empty'; list.textContent = 'تعذر تحميل الخدمات.'; showMessage(error.message);
+      }
     }
     document.getElementById('load').addEventListener('click', loadServices);
     document.getElementById('refresh').addEventListener('click', loadServices);
