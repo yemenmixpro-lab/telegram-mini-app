@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تطبيق Telegram</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 20px; background: #f4f7fb; color: #172033; font-family: Tahoma, Arial, sans-serif; }
+    main { width: min(100%, 420px); padding: 28px 22px; text-align: center; background: #fff; border: 1px solid #e5eaf2; border-radius: 20px; box-shadow: 0 10px 30px #14234414; }
+    .tag { display: inline-block; padding: 7px 12px; border-radius: 99px; color: #2864df; background: #edf3ff; font-size: 12px; font-weight: bold; }
+    h1 { margin: 20px 0 12px; font-size: 30px; }
+    p { margin: 0 0 22px; color: #5d6780; line-height: 1.8; }
+    button { width: 100%; padding: 15px; border: 0; border-radius: 13px; color: #fff; background: #2864df; font-size: 16px; font-weight: bold; cursor: pointer; }
+    #status { margin-top: 16px; color: #5d6780; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="tag">Telegram Mini App</span>
+    <h1>أهلاً بك</h1>
+    <p>هذه النسخة الأولية جاهزة للاختبار داخل Telegram.</p>
+    <button id="demo">تجربة الزر</button>
+    <div id="status">جاهز للتشغيل</div>
+  </main>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    const tg = window.Telegram && window.Telegram.WebApp;
+    const status = document.getElementById('status');
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      status.textContent = 'التطبيق يعمل داخل Telegram';
+    }
+    document.getElementById('demo').addEventListener('click', () => {
+      status.textContent = 'تم تشغيل زر التجربة بنجاح';
+      if (tg) tg.showAlert('مرحباً! النسخة الأساسية تعمل بنجاح.');
+      else alert('مرحباً! النسخة الأساسية تعمل بنجاح.');
+    });
+  </script>
+</body>
+</html>
