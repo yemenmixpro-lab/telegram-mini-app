@@ -3,22 +3,28 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const axios = require('axios');
+const crypto = require('crypto');
 const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
 const WEBAPP_URL = (process.env.TELEGRAM_WEBAPP_URL || '').trim();
+const CHANNEL_USERNAME = (process.env.TELEGRAM_CHANNEL_USERNAME || 'SubzoOfficial').replace(/^@/, '').trim();
 const SMMCPAN_API_URL = (process.env.SMMCPAN_API_URL || 'https://smmcpan.com/api/v2').trim().replace(/\/$/, '');
 const SMMCPAN_API_KEY = (process.env.SMMCPAN_API_KEY || '').trim();
+const PLATFORM_MARGIN_RATE = Number(process.env.PLATFORM_MARGIN_RATE || 0.1);
 const SERVICES_CACHE_MS = 5 * 60 * 1000;
 
 let servicesCache = { expiresAt: 0, services: [] };
 let servicesRequest = null;
 
 app.disable('x-powered-by');
-app.use(express.json({ limit: '100kb' }));
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
+app.use(express.json({ limit: '200kb' }));
+app.use(express.urlencoded({ extended: true }));
+
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir, { maxAge: '1h', index: 'index.html' }));
 
 function numericValue(value) {
   const parsed = Number(value);
@@ -28,16 +34,22 @@ function numericValue(value) {
 function normalizeService(rawService) {
   if (!rawService || typeof rawService !== 'object') return null;
 
-  const service = rawService.service ?? rawService.service_id ?? rawService.id ?? rawService.serviceId;
-  if (service === undefined || service === null || String(service).trim() === '') return null;
+  const serviceId = rawService.service ?? rawService.service_id ?? rawService.id ?? rawService.serviceId;
+  if (serviceId === undefined || serviceId === null || String(serviceId).trim() === '') return null;
+
+  const basePrice = numericValue(rawService.price ?? rawService.rate ?? rawService.cost ?? rawService.original_price);
+  const min = numericValue(rawService.min ?? rawService.minimum ?? rawService.min_amount);
+  const max = numericValue(rawService.max ?? rawService.maximum ?? rawService.max_amount);
+  const sellingPrice = basePrice > 0 ? basePrice * (1 + PLATFORM_MARGIN_RATE) : 0;
 
   return {
-    service: String(service),
+    service: String(serviceId),
     name: String(rawService.name || rawService.title || rawService.service_name || 'خدمة بدون اسم'),
     category: String(rawService.category || rawService.category_name || rawService.type || 'عام'),
-    price: numericValue(rawService.price ?? rawService.rate ?? rawService.cost ?? rawService.original_price),
-    min: numericValue(rawService.min ?? rawService.minimum ?? rawService.min_amount),
-    max: numericValue(rawService.max ?? rawService.maximum ?? rawService.max_amount)
+    price: basePrice,
+    selling_price: sellingPrice,
+    min,
+    max
   };
 }
 
@@ -71,57 +83,154 @@ async function requestServices() {
   return servicesRequest;
 }
 
+function parseTelegramInitData(initData) {
+  if (!initData || typeof initData !== 'string') return null;
+
+  const params = new URLSearchParams(initData);
+  const hash = params.get('hash');
+  if (!hash || !BOT_TOKEN) return null;
+
+  const entries = [];
+  for (const [key, value] of params.entries()) {
+    if (key !== 'hash') entries.push([key, value]);
+  }
+  entries.sort(([a], [b]) => a.localeCompare(b));
+
+  const dataCheckString = entries.map(([key, value]) => `${key}=${value}`).join('\n');
+  const secretKey = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+  const computed = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+
+  if (computed !== hash) return null;
+
+  const userValue = params.get('user');
+  if (!userValue) return null;
+
+  try {
+    return JSON.parse(userValue);
+  } catch {
+    return null;
+  }
+}
+
+async function checkChannelSubscription(userId) {
+  if (!BOT_TOKEN || !userId) return false;
+
+  try {
+    const response = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember`, {
+      params: {
+        chat_id: `@${CHANNEL_USERNAME}`,
+        user_id: userId
+      },
+      timeout: 15000
+    });
+
+    const status = response.data?.result?.status;
+    return ['member', 'administrator', 'creator'].includes(status);
+  } catch (error) {
+    console.error('Telegram subscription check error:', error.response?.data || error.message);
+    return false;
+  }
+}
+
 app.get('/health', (_req, res) => {
-  res.json({
+  res.status(200).json({
     ok: true,
-    app: 'telegram-mini-app',
+    app: 'subzo-miniapp',
     telegramBotConfigured: Boolean(BOT_TOKEN),
     telegramWebAppConfigured: Boolean(WEBAPP_URL),
     smmcpanConfigured: Boolean(SMMCPAN_API_KEY),
-    cachedServices: servicesCache.services.length,
-    servicesEndpoint: '/api/services'
+    servicesEndpoint: '/api/services',
+    channelCheckEndpoint: '/api/telegram/check-subscription'
   });
+});
+
+app.post('/api/telegram/check-subscription', async (req, res) => {
+  const initData = String(req.body.initData || '').trim();
+  const user = parseTelegramInitData(initData);
+
+  if (!BOT_TOKEN) {
+    return res.status(503).json({ ok: false, message: 'TELEGRAM_BOT_TOKEN غير موجود.' });
+  }
+
+  if (!user || !user.id) {
+    return res.status(400).json({ ok: false, message: 'لا توجد بيانات Telegram صالحة داخل التطبيق.' });
+  }
+
+  try {
+    const subscribed = await checkChannelSubscription(user.id);
+    return res.json({
+      ok: true,
+      subscribed,
+      user: {
+        id: user.id,
+        username: user.username || null,
+        first_name: user.first_name || null,
+        last_name: user.last_name || null
+      },
+      channel: `@${CHANNEL_USERNAME}`
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: 'تعذر التحقق من الاشتراك.' });
+  }
 });
 
 app.get('/api/services', async (_req, res) => {
   if (!SMMCPAN_API_KEY) {
-    return res.status(503).json({ ok: false, message: 'SMMCPAN_API_KEY غير مضبوط في Railway.' });
+    return res.status(503).json({ ok: false, message: 'SMMCPAN_API_KEY غير موجود في متغيرات البيئة.' });
   }
 
   try {
     const services = await requestServices();
+    const response = services.map((service) => ({
+      ...service,
+      selling_price: Number(service.selling_price || (service.price * (1 + PLATFORM_MARGIN_RATE)))
+    }));
+
     res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
-    return res.json({ ok: true, source: 'SMMCPAN', count: services.length, services });
+    return res.json({ ok: true, source: 'SMMCPAN', count: response.length, margin_rate: PLATFORM_MARGIN_RATE, services: response });
   } catch (error) {
-    console.error('SMMCPAN services error:', error.response?.data || error.message);
-    return res.status(502).json({ ok: false, message: 'تعذر تحميل الخدمات من SMMCPAN حاليًا.' });
+    console.error('SMMCPAN service fetch failed:', error.response?.data || error.message);
+    return res.status(502).json({ ok: false, message: 'تعذر الاتصال بـ SMMCPAN في الوقت الحالي.' });
   }
 });
 
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
+});
+
+app.get('/index.html', (_req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
+});
+
+app.use((req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 if (BOT_TOKEN && WEBAPP_URL) {
   const bot = new TelegramBot(BOT_TOKEN, { polling: true });
   bot.on('polling_error', (error) => console.error('Telegram polling error:', error.message));
+
   bot.onText(/^\/(start|help)(?:@[^\s]+)?$/i, async (msg) => {
     try {
-      await bot.sendMessage(msg.chat.id, '<b>مرحبًا بك في SMMCPAN</b>\nافتح التطبيق لاستعراض الخدمات المتاحة.', {
+      await bot.sendMessage(msg.chat.id, 'مرحبًا بك في Subzo\nاضغط الزر لفتح التطبيق والحصول على الخدمات.', {
         parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: [[{ text: 'فتح التطبيق', web_app: { url: WEBAPP_URL } }]] }
+        reply_markup: {
+          inline_keyboard: [[{ text: 'فتح التطبيق', web_app: { url: WEBAPP_URL } }]]
+        }
       });
     } catch (error) {
-      console.error('Telegram message error:', error.message);
+      console.error('Telegram bot sendMessage error:', error.message);
     }
   });
-  console.log('Telegram bot polling started.');
+
+  console.log(`Telegram bot started. WebApp URL: ${WEBAPP_URL}`);
 } else {
-  console.warn('Telegram bot is disabled until TELEGRAM_BOT_TOKEN and TELEGRAM_WEBAPP_URL are configured.');
+  console.warn('Bot is disabled until TELEGRAM_BOT_TOKEN and TELEGRAM_WEBAPP_URL are configured.');
 }
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mini app listening on 0.0.0.0:${PORT}`);
+  console.log(`Mini app running on 0.0.0.0:${PORT}`);
+  console.log(`Health check: http://0.0.0.0:${PORT}/health`);
 });
 
 server.on('error', (error) => {
