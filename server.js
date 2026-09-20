@@ -8,7 +8,13 @@ const TelegramBot = require('node-telegram-bot-api');
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
-const WEBAPP_URL = (process.env.TELEGRAM_WEBAPP_URL || '').trim();
+
+// Prefer the Railway variable. Railway may also expose RAILWAY_PUBLIC_DOMAIN.
+// The fallback keeps the initial bot usable if TELEGRAM_WEBAPP_URL was omitted.
+const configuredWebAppUrl = (process.env.TELEGRAM_WEBAPP_URL || '').trim();
+const railwayDomain = (process.env.RAILWAY_PUBLIC_DOMAIN || '').trim();
+const WEBAPP_URL = configuredWebAppUrl || (railwayDomain ? `https://${railwayDomain}` : 'https://telegram-mini-app-production-a7ba.up.railway.app');
+
 const SMMCPAN_API_URL = (process.env.SMMCPAN_API_URL || 'https://smmcpan.com/api/v2').trim().replace(/\/$/, '');
 const SMMCPAN_API_KEY = (process.env.SMMCPAN_API_KEY || '').trim();
 
@@ -21,6 +27,7 @@ app.get('/health', (req, res) => {
     service: 'telegram-mini-app',
     telegramBotConfigured: Boolean(BOT_TOKEN),
     webAppUrlConfigured: Boolean(WEBAPP_URL),
+    webAppUrlSource: configuredWebAppUrl ? 'TELEGRAM_WEBAPP_URL' : (railwayDomain ? 'RAILWAY_PUBLIC_DOMAIN' : 'fallback'),
     smmcpanConfigured: Boolean(SMMCPAN_API_KEY)
   });
 });
@@ -34,7 +41,6 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Kept only as a basic integration test; no services or orders are implemented yet.
 app.get('/api/smmcpan/status', async (req, res) => {
   if (!SMMCPAN_API_KEY) {
     return res.status(400).json({ ok: false, message: 'SMMCPAN_API_KEY is not configured.' });
@@ -59,9 +65,8 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-let bot;
 if (BOT_TOKEN) {
-  bot = new TelegramBot(BOT_TOKEN, { polling: true });
+  const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
   bot.on('polling_error', (error) => {
     console.error('Telegram polling error:', error.message);
@@ -77,14 +82,14 @@ if (BOT_TOKEN) {
   ]).catch((error) => console.error('Unable to set bot commands:', error.message));
 
   bot.onText(/^\/(start|help)(?:@[^ ]+)?(?:\s|$)/i, async (msg) => {
-    const replyMarkup = WEBAPP_URL && /^https:\/\//i.test(WEBAPP_URL)
+    const replyMarkup = /^https:\/\//i.test(WEBAPP_URL)
       ? { inline_keyboard: [[{ text: 'فتح التطبيق', web_app: { url: WEBAPP_URL } }]] }
       : undefined;
 
     const options = replyMarkup ? { parse_mode: 'HTML', reply_markup: replyMarkup } : { parse_mode: 'HTML' };
     const text = replyMarkup
       ? '<b>مرحباً بك</b>\nاضغط الزر لفتح التطبيق.'
-      : '<b>مرحباً بك</b>\nالتطبيق لم يُضبط بعد. أضف TELEGRAM_WEBAPP_URL في Railway.';
+      : '<b>مرحباً بك</b>\nرابط التطبيق غير صالح. يجب أن يبدأ بـ https://.';
 
     try {
       await bot.sendMessage(msg.chat.id, text, options);
@@ -93,12 +98,12 @@ if (BOT_TOKEN) {
     }
   });
 
-  console.log('Telegram bot polling started.');
+  console.log(`Telegram bot polling started. WebApp URL: ${WEBAPP_URL}`);
 } else {
   console.warn('TELEGRAM_BOT_TOKEN is missing; the web app will run but the bot will not start.');
 }
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Web app listening on port ${PORT}`);
-  if (!WEBAPP_URL) console.warn('TELEGRAM_WEBAPP_URL is missing. Add the Railway public URL.');
+  console.log(`WebApp URL: ${WEBAPP_URL}`);
 });
